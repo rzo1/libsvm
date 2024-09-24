@@ -11,7 +11,7 @@
 
     <groupId>tw.edu.ntu.csie</groupId>
     <artifactId>libsvm</artifactId>
-    <version>3.31</version>
+    <version>3.35</version>
 
     <name>libsvm</name>
     <description>LIBSVM - A Library for Support Vector Machines</description>
