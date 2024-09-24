@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from ctypes import *
 from ctypes.util import find_library
 from os import path
@@ -34,7 +32,7 @@ except:
         if sys.platform == 'win32':
             libsvm = CDLL(path.join(dirname, r'..\..\windows\libsvm.dll'))
         else:
-            libsvm = CDLL(path.join(dirname, '../../libsvm.so.3'))
+            libsvm = CDLL(path.join(dirname, '../../libsvm.so.4'))
     except:
     # For unix the prefix 'lib' is not considered.
         if find_library('svm'):
@@ -140,10 +138,18 @@ try:
     from numba import jit
     jit_enabled = True
 except:
-    jit = lambda x: x
+    # We need to support two cases: when jit is called with no arguments, and when jit is called with
+    # a keyword argument.
+    def jit(func=None, *args, **kwargs):
+        if func is None:
+            # This handles the case where jit is used with parentheses: @jit(nopython=True)
+            return lambda x: x
+        else:
+            # This handles the case where jit is used without parentheses: @jit
+            return func
     jit_enabled = False
 
-@jit
+@jit(nopython=True)
 def csr_to_problem_jit(l, x_val, x_ind, x_rowptr, prob_val, prob_ind, prob_rowptr, indx_start):
     for i in range(l):
         b1,e1 = x_rowptr[i], x_rowptr[i+1]
@@ -164,7 +170,9 @@ def csr_to_problem(x, prob, isKernel):
 
     # Extra space for termination node and (possibly) bias term
     x_space = prob.x_space = np.empty((x.nnz+x.shape[0]), dtype=svm_node)
-    prob.rowptr = x.indptr.copy()
+    # rowptr has to be a 64bit integer because it will later be used for pointer arithmetic,
+    # which overflows when the added pointer points to an address that is numerically high.
+    prob.rowptr = x.indptr.astype(np.int64, copy=True)
     prob.rowptr[1:] += np.arange(1,x.shape[0]+1)
     prob_ind = x_space["index"]
     prob_val = x_space["value"]

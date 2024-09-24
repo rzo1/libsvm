@@ -16,7 +16,7 @@ build_ext.get_export_symbols = lambda x, y: []
 
 PACKAGE_DIR = "libsvm"
 PACKAGE_NAME = "libsvm-official"
-VERSION = "3.31.0"
+VERSION = "3.35.0"
 cpp_dir = "cpp-source"
 # should be consistent with dynamic_lib_name in libsvm/svm.py
 dynamic_lib_name = "clib"
@@ -47,7 +47,7 @@ if sys.platform == "win32":
     kwargs_for_extension.update(
         {
             "define_macros": [("_WIN64", ""), ("_CRT_SECURE_NO_DEPRECATE", "")],
-            "extra_link_args": ["-DEF:{}\svm.def".format(cpp_dir)],
+            "extra_link_args": [r"-DEF:{}\svm.def".format(cpp_dir)],
             "extra_compile_args": ["/openmp"],
         }
     )
